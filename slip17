@@ -1,0 +1,173 @@
+#include <stdio.h>
+#include <ctype.h>
+#include <stdlib.h>
+int main()
+{
+ FILE *f;
+ char ch;
+ f=fopen("abc.txt","r");
+ if(f==NULL)
+ {
+ printf("File not found\n");
+ exit(0);
+ }
+ printf("The original file is::\n");
+ while(!feof(f))
+ {
+ ch=fgetc(f);
+ printf("%c",ch);
+ }
+ rewind(f);
+ printf("\n\nReversed case file::\n");
+ while(!feof(f))
+ {
+ ch=fgetc(f);
+ if(islower(ch))
+ printf("%c",toupper(ch));
+ else if(isupper(ch))
+ printf("%c",tolower(ch));
+ else
+ printf("%c",ch);
+ }
+fclose(f);
+}
+yash@lenovo:~/slip17$ ./a.out
+The original file is::
+Hey!
+How are you?
+Good afternoon!
+Bye.
+ 
+Reversed case file::
+hEY!
+hOW ARE YOU?
+gOOD AFTERNOON!
+bYE.
+ yash@lenovo:~/slip17$ 
+
+
+#include <stdio.h>
+struct emp
+{
+ int eno;
+ char name[30];
+ float salary;
+}s[50];
+void disp(struct emp s[50],int n)
+{
+ int i;
+ printf("\n\nEmployees with salary greater than 10000\n");
+ for(i=0;i<n;i++)
+ {
+ if(s[i].salary>10000)
+ {
+ printf("\nEmp no=%d\nName=%s\nSalary=%f\n",s[i].eno,s[i].name,s[i].salary);
+ }
+ }
+}
+int main()
+{
+ int n,i;
+ printf("Enter lim: ");
+ scanf("%d",&n);
+ for(i=0;i<n;i++)
+ {
+ printf("enter eno name salary\n");
+ scanf("%d%s%f",&s[i].eno,s[i].name,&s[i].salary);
+ }
+ for(i=0;i<n;i++)
+ {
+ printf("\neno=%d\nname=%s\nsalary=%f\n",s[i].eno,s[i].name,s[i].salary);
+ }
+ disp(s,n);
+}
+
+
+RDBMS
+
+slip17=# create table student(roll_no int primary key,sname varchar(30),sclass char(10));
+CREATE TABLE
+slip17=# insert into student values(1,'Yash','Fybcs');
+INSERT 0 1
+slip17=# insert into student values(2,'Akshay','Tybcs');
+INSERT 0 1
+slip17=# insert into student values(3,'Sejal','Sybcs');
+INSERT 0 1
+slip17=# select * from student;
+ roll_no | sname | sclass 
+---------+--------+------------
+ 1 | Yash | Fybcs 
+ 2 | Akshay | Tybcs 
+ 3 | Sejal | Sybcs 
+(3 rows)
+
+slip17=# create table teacher(t_no int primary key,tname varchar(30),experience int);
+CREATE TABLE
+slip17=# insert into teacher values(101,'Joshi M.S.',3);
+INSERT 0 1
+slip17=# insert into teacher values(102,'Mhaske A.',10);
+INSERT 0 1
+slip17=# insert into teacher values(103,'Shinde B.S.',12);
+INSERT 0 1
+slip17=# select * from teacher;
+ t_no | tname | experience 
+------+-------------+------------
+ 101 | Joshi M.S. | 3
+ 102 | Mhaske A. | 10
+ 103 | Shinde B.S. | 12
+(3 rows)
+
+slip17=# create table s_t(r_no int references student(roll_no),t_no int references teacher(t_no));
+CREATE TABLE
+slip17=# insert into s_t values(1,101);
+INSERT 0 1
+slip17=# insert into s_t values(2,103);
+INSERT 0 1
+slip17=# insert into s_t values(3,102);
+INSERT 0 1
+slip17=# select * from s_t;
+ r_no | t_no 
+------+------
+ 1 | 101
+ 2 | 103
+ 3 | 102
+(3 rows)
+
+create or replace function fun() returns trigger
+as
+$$
+begin
+if(new.roll_no<=0)then
+raise exception'Invalid Roll Number';
+end if;
+end;
+$$
+language plpgsql;
+
+create trigger t
+before insert on student
+for each row execute procedure fun();
+slip17=# insert into student values(0,'omkar','Sybcs');
+ERROR: Invalid Roll Number
+CONTEXT: PL/pgSQL function fun() line 4 at RAISE
+
+create or replace function f() returns void
+as
+$$
+declare
+ans teacher%rowtype;
+begin
+select * into ans from teacher where experience<10;
+raise notice'Teacher no=%',ans.t_no;
+raise notice'Teacher name=%',ans.tname;
+raise notice'Experience=%',ans.experience;
+end;
+$$
+language plpgsql;
+slip17=# select f();
+NOTICE: Teacher no=101
+NOTICE: Teacher name=Joshi M.S.
+NOTICE: Experience=3
+ f 
+---
+(1 row)
